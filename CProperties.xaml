@@ -1,0 +1,157 @@
+﻿<UserControl x:Class="UI_Resource_Themer.CProperties"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             xmlns:local="clr-namespace:UI_Resource_Themer"
+             mc:Ignorable="d" 
+             d:DesignHeight="450" d:DesignWidth="128">
+    <Grid Background="#17202A">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="26"/>
+            <RowDefinition Height="26"/>
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
+        <Label Content="Control Properties"  Foreground="#F5B041" Background="Black" FontWeight="Bold"/>
+        <Grid Grid.Row="1">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="25"/>
+            </Grid.ColumnDefinitions>
+            <Label x:Name="ControlName" Foreground="#F5B041" Content="No Control Selected."/>
+            <local:CLock x:Name="Lock" Grid.Column="1" Margin="5" Visibility="Hidden"/>
+        </Grid>
+        <ScrollViewer Grid.Row="2" VerticalScrollBarVisibility="Auto">
+            <StackPanel x:Name="PropertyStack">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="*"/>
+                    </Grid.ColumnDefinitions>
+                    <Label Content="fieldname" Foreground="LightGray"/>
+                    <TextBox x:Name="fieldName" Margin="3" Grid.Column="1"/>
+                </Grid>
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="*"/>
+                    </Grid.ColumnDefinitions>
+                    <Label Content="xpos" Foreground="LightGray"/>
+                    <TextBox x:Name="xpos" Margin="3" Grid.Column="1"/>
+                </Grid>
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="*"/>
+                    </Grid.ColumnDefinitions>
+                    <Label Foreground="LightGray" Content="ypos"/>
+                    <TextBox x:Name="ypos" Grid.Column="1" Margin="3"/>
+                </Grid>
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="*"/>
+                    </Grid.ColumnDefinitions>
+                    <Label Foreground="LightGray" Content="wide"/>
+                    <TextBox x:Name="wide" Grid.Column="1" Margin="3"/>
+                </Grid>
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="*"/>
+                    </Grid.ColumnDefinitions>
+                    <Label Foreground="LightGray" Content="tall"/>
+                    <TextBox x:Name="tall" Grid.Column="1" Margin="3"/>
+                </Grid>
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="*"/>
+                    </Grid.ColumnDefinitions>
+                    <Label Foreground="LightGray" Content="enabled"/>
+                    <TextBox x:Name="enabled" Grid.Column="1" Margin="3"/>
+                </Grid>
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="*"/>
+                    </Grid.ColumnDefinitions>
+                    <Label Foreground="LightGray" Content="visible"/>
+                    <TextBox x:Name="visible" Grid.Column="1" Margin="3"/>
+                </Grid>
+                <Grid x:Name="imageURI" Visibility="Collapsed">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="*"/>
+                    </Grid.ColumnDefinitions>
+                    <Label Foreground="LightGray" Content="image"/>
+                    <TextBox x:Name="image" Grid.Column="1" Margin="3"/>
+                </Grid>
+                <Grid x:Name="imageCOLOR" Visibility="Collapsed">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="*"/>
+                    </Grid.ColumnDefinitions>
+                    <Label Content="imagecolor" Foreground="LightGray"/>
+                    <TextBox x:Name="imagecolor" Grid.Column="1" Margin="3"/>
+                </Grid>
+                <Grid x:Name="imageSCALE" Visibility="Collapsed">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="*"/>
+                    </Grid.ColumnDefinitions>
+                    <Label Foreground="LightGray" Content="scaleimage"/>
+                    <TextBox x:Name="scaleImage" Grid.Column="1" Margin="3"/>
+                </Grid>
+                <Grid x:Name="imageFILLCOLOR" Visibility="Collapsed">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="*"/>
+                    </Grid.ColumnDefinitions>
+                    <Label Content="fillcolor" Foreground="LightGray"/>
+                    <TextBox x:Name="fillcolor" Grid.Column="1" Margin="3"/>
+                </Grid>
+                <Grid x:Name="labelTEXT" Visibility="Collapsed">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="*"/>
+                    </Grid.ColumnDefinitions>
+                    <Label Content="labeltext" Foreground="LightGray"/>
+                    <TextBox x:Name="labelText" Grid.Column="1" Margin="3"/>
+                </Grid>
+                <Grid x:Name="labelALIGN" Visibility="Collapsed">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="*"/>
+                    </Grid.ColumnDefinitions>
+                    <Label Content="textalignment" Foreground="LightGray"/>
+                    <TextBox x:Name="textAlignment" Grid.Column="1" Margin="3"/>
+                </Grid>
+                <Grid x:Name="labelFONT" Visibility="Collapsed">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="*"/>
+                    </Grid.ColumnDefinitions>
+                    <Label Content="font" Foreground="LightGray"/>
+                    <TextBox x:Name="font" Grid.Column="1" Margin="3"/>
+                </Grid>
+                <Grid x:Name="buttonPAINTBG" Visibility="Collapsed">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="*"/>
+                    </Grid.ColumnDefinitions>
+                    <Label Content="paintbackground" Foreground="LightGray"/>
+                    <TextBox x:Name="paintbackground" Grid.Column="1" Margin="3"/>
+                </Grid>
+                <Grid x:Name="buttonCOMMAND" Visibility="Collapsed">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="*"/>
+                    </Grid.ColumnDefinitions>
+                    <Label Foreground="LightGray" Content="command"/>
+                    <TextBox x:Name="command" Grid.Column="1" Margin="3"/>
+                </Grid>
+            </StackPanel>
+        </ScrollViewer>
+    </Grid>
+</UserControl>

@@ -1,0 +1,42 @@
+﻿<Window x:Class="UI_Resource_Themer.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:UI_Resource_Themer"
+        mc:Ignorable="d"
+        Title="Counter Strike 1.6 Resource UI Themer" Height="646.305" Width="1062" WindowState="Maximized" Background="#FF191919" Icon="ico.ico">
+    <Grid Background="#FF191919">
+        <Grid Width="240" HorizontalAlignment="Left">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="32"/>
+                <RowDefinition Height="172"/>
+                <RowDefinition Height="*"/>
+                <RowDefinition Height="*"/>
+            </Grid.RowDefinitions>
+            <Menu Background="Transparent" VerticalAlignment="Center">
+                <MenuItem Foreground="LightGray" Header="File">
+                    <MenuItem x:Name="StripOpen" Foreground="Black" Header="Open" InputGestureText="Ctrl+O"/>
+                    <MenuItem x:Name="StripSave" Foreground="Black" Header="Save" InputGestureText="Ctrl+S"/>
+                </MenuItem>
+                <MenuItem Foreground="LightGray" Header="Edit">
+                    <MenuItem x:Name="StripBringToFront" Foreground="Black" Header="Bring To Front" InputGestureText="["/>
+                    <MenuItem x:Name="StripSendToBack" Foreground="Black" Header="Send To Back" InputGestureText="]"/>
+                    <MenuItem IsEnabled="False"/>
+                    <MenuItem x:Name="StripClearSelect" Foreground="Black" Header="Clear Selection" InputGestureText="Esc"/>
+                    <MenuItem x:Name="StripReset" Foreground="Black" Header="Reload File" InputGestureText="Ctrl+R"/>
+                    <MenuItem x:Name="StripDelete" Foreground="Black" Header="Delete" InputGestureText="Del"/>
+                </MenuItem>
+                <MenuItem Foreground="LightGray" x:Name="StripAbout" Header="About"/>
+            </Menu>
+            <local:CControlsExplorer Grid.Row="3" Margin="0,0,0,3"/>
+            <local:CToolbox Grid.Row="1" x:Name="Toolbox"/>
+            <local:CProperties Grid.Row="2"/>
+        </Grid>
+        <Canvas ClipToBounds="True" x:Name="ControlArea" Height="600" VerticalAlignment="Top" HorizontalAlignment="Left" Width="800" Margin="243,4,0,0" SnapsToDevicePixels="True">
+            <Canvas.Background>
+                <ImageBrush ImageSource="EditorBG/offbg.jpg" Stretch="Uniform"/>
+            </Canvas.Background>
+        </Canvas>
+    </Grid>
+</Window>

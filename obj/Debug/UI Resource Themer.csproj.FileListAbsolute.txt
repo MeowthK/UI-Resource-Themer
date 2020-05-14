@@ -1,0 +1,29 @@
+C:\Users\MeowthK\source\repos\UI Resource Themer\obj\Debug\CToolbox.g.cs
+C:\Users\MeowthK\source\repos\UI Resource Themer\obj\Debug\MainWindow.g.cs
+C:\Users\MeowthK\source\repos\UI Resource Themer\obj\Debug\App.g.cs
+C:\Users\MeowthK\source\repos\UI Resource Themer\obj\Debug\GeneratedInternalTypeHelper.g.cs
+C:\Users\MeowthK\source\repos\UI Resource Themer\obj\Debug\CToolbox.baml
+C:\Users\MeowthK\source\repos\UI Resource Themer\obj\Debug\MainWindow.baml
+C:\Users\MeowthK\source\repos\UI Resource Themer\obj\Debug\Themes\Generic.baml
+C:\Users\MeowthK\source\repos\UI Resource Themer\obj\Debug\UI_Resource_Themer.Properties.Resources.resources
+C:\Users\MeowthK\source\repos\UI Resource Themer\obj\Debug\UI Resource Themer.csproj.GenerateResource.cache
+C:\Users\MeowthK\source\repos\UI Resource Themer\obj\Debug\UI Resource Themer.csproj.CoreCompileInputs.cache
+C:\Users\MeowthK\source\repos\UI Resource Themer\obj\Debug\CProperties.g.cs
+C:\Users\MeowthK\source\repos\UI Resource Themer\obj\Debug\CProperties.baml
+C:\Users\MeowthK\source\repos\UI Resource Themer\obj\Debug\UI Resource Themer.csproj.CopyComplete
+C:\Users\MeowthK\source\repos\UI Resource Themer\bin\Debug\TgaLib.dll
+C:\Users\MeowthK\source\repos\UI Resource Themer\obj\Debug\CControlsExplorer.g.cs
+C:\Users\MeowthK\source\repos\UI Resource Themer\obj\Debug\CControlsExplorer.baml
+C:\Users\MeowthK\source\repos\UI Resource Themer\obj\Debug\LoadingDialog.g.cs
+C:\Users\MeowthK\source\repos\UI Resource Themer\obj\Debug\LoadingDialog.baml
+C:\Users\MeowthK\source\repos\UI Resource Themer\obj\Debug\About.g.cs
+C:\Users\MeowthK\source\repos\UI Resource Themer\obj\Debug\About.baml
+C:\Users\MeowthK\source\repos\UI Resource Themer\bin\Debug\CS UI Resource Themer.exe.config
+C:\Users\MeowthK\source\repos\UI Resource Themer\bin\Debug\CS UI Resource Themer.exe
+C:\Users\MeowthK\source\repos\UI Resource Themer\bin\Debug\CS UI Resource Themer.pdb
+C:\Users\MeowthK\source\repos\UI Resource Themer\obj\Debug\CS UI Resource Themer_MarkupCompile.cache
+C:\Users\MeowthK\source\repos\UI Resource Themer\obj\Debug\CS UI Resource Themer_MarkupCompile.lref
+C:\Users\MeowthK\source\repos\UI Resource Themer\obj\Debug\CS UI Resource Themer.g.resources
+C:\Users\MeowthK\source\repos\UI Resource Themer\obj\Debug\CS UI Resource Themer.exe
+C:\Users\MeowthK\source\repos\UI Resource Themer\obj\Debug\CS UI Resource Themer.pdb
+C:\Users\MeowthK\source\repos\UI Resource Themer\obj\Debug\UI Resource Themer.csprojAssemblyReference.cache
