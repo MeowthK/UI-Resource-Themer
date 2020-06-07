@@ -11,7 +11,9 @@
             <Grid.RowDefinitions>
                 <RowDefinition Height="32"/>
                 <RowDefinition Height="172"/>
+                <RowDefinition Height="3"/>
                 <RowDefinition Height="*"/>
+                <RowDefinition Height="3"/>
                 <RowDefinition Height="*"/>
             </Grid.RowDefinitions>
             <Menu Background="Transparent" VerticalAlignment="Center">
@@ -27,11 +29,14 @@
                     <MenuItem x:Name="StripReset" Foreground="Black" Header="Reload File" InputGestureText="Ctrl+R"/>
                     <MenuItem x:Name="StripDelete" Foreground="Black" Header="Delete" InputGestureText="Del"/>
                 </MenuItem>
-                <MenuItem Foreground="LightGray" x:Name="StripAbout" Header="About"/>
+                <MenuItem Foreground="LightGray" x:Name="TGALoader" Header="PNGToTGA"/>
+                <MenuItem Margin="30,0,0,0" Grid.Column="1" Foreground="LightGray" x:Name="StripAbout" Header="About"/>
             </Menu>
-            <local:CControlsExplorer Grid.Row="3" Margin="0,0,0,3"/>
+            <local:CControlsExplorer x:Name="ControlExpPane" Grid.Row="5" Margin="0,0,0,3"/>
+            <GridSplitter Grid.Row="2" HorizontalAlignment="Stretch"/>
             <local:CToolbox Grid.Row="1" x:Name="Toolbox"/>
-            <local:CProperties Grid.Row="2"/>
+            <GridSplitter Grid.Row="4" HorizontalAlignment="Stretch"/>
+            <local:CProperties x:Name="PropertiesPane" Grid.Row="3"/>
         </Grid>
         <Canvas ClipToBounds="True" x:Name="ControlArea" Height="600" VerticalAlignment="Top" HorizontalAlignment="Left" Width="800" Margin="243,4,0,0" SnapsToDevicePixels="True">
             <Canvas.Background>

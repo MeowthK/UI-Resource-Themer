@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
@@ -44,7 +43,7 @@ namespace UI_Resource_Themer
         public event EventHandler Moved, NameChanged;
         public Canvas OldParent { get; set; } = null;
 
-        private static List<CControl> ctlsActive = new List<CControl>();
+        private static readonly HashSet<CControl> ctlsActive = new HashSet<CControl>();
 
         public static CControl[] ControlsActive
         {
@@ -65,10 +64,44 @@ namespace UI_Resource_Themer
             }
         }
 
+        public bool IsDeleted { get; set; } = false;
+        public bool LockX { get; set; } = false;
+        public bool LockY { get; set; } = false;
+        public bool LockWidth { get; set; } = false;
+        public bool LockHeight { get; set; } = false;
+
         public bool Discard { get; set; } = false;
         public bool Locked { get; set; } = false;
+        public bool IsMultiSelected
+        {
+            get => ismultiselected;
+            set
+            {
+                ismultiselected = value;
+                InvalidateVisual();
+            }
+        }
 
         public List<string> UnknownAttrs = new List<string>();
+
+        public CControl GetClone
+        {
+            get
+            {
+                CControl ctl = (CControl) Activator.CreateInstance(GetType());
+
+                ctl.controlname = controlname;
+                ctl.Discard = Discard;
+                ctl.OldParent = OldParent;
+                ctl.Locked = false;
+                ctl.enabled = "1";
+                ctl.visible = "1";
+                ctl.wide = wide;
+                ctl.tall = tall;
+
+                return ctl;
+            }
+        }
 
         public string GetUnknownAttrs
         {
@@ -83,14 +116,36 @@ namespace UI_Resource_Themer
             }
         }
 
+        private string visible_P = "1";
+        private string enabled_P = "1";
+
         public string headerName { get; set; }
 
-        public string enabled { get => IsEnabled ? "1" : "0";
-            set => IsEnabled = value.Trim() == "1"; }
+        public string enabled
+        {
+            get => enabled_P;
+            set
+            {
+                if (enabled_P != value)
+                {
+                    enabled_P = value;
+                    IsEnabled = enabled_P == "1";
+                }
+            }
+        }
+
         public string visible
         {
-            get => IsVisible ? "1" : "0";
-            set => Visibility = value.Trim() == "1" ? Visibility.Visible : Visibility.Hidden; }
+            get => visible_P;
+            set
+            {
+                if (visible_P != value)
+                {
+                    visible_P = value;
+                    Visibility = visible_P == "1" ? Visibility.Visible : Visibility.Hidden;
+                }
+            }
+        }
 
         public string xpos
         {
@@ -180,7 +235,7 @@ namespace UI_Resource_Themer
                     w = value;
 
                     var successw = int.TryParse(value, out int newWidth);
-                    Width = successw? newWidth : 0;
+                    Width = successw ? (newWidth >= 0 ? newWidth : 0) : 0;
 
                     CSControlChanged?.Invoke(this, EventArgs.Empty);
                 }
@@ -197,7 +252,7 @@ namespace UI_Resource_Themer
                     h = value;
 
                     var successh = int.TryParse(value, out int newHeight);
-                    Height = successh ? newHeight : 0;
+                    Height = successh ? (newHeight >= 0 ? newHeight : 0) : 0;
 
                     CSControlChanged?.Invoke(this, EventArgs.Empty);
                 }
@@ -211,6 +266,7 @@ namespace UI_Resource_Themer
         public string controlname { get; set; }
 
         #region Private Fields
+        private bool ismultiselected = false, isMouseDown = false;
         private string x = "", y = "", w = "", h = "", actualname;
         private Color boxColor = Color.FromArgb(0, 0, 0, 0);
         private static CControl lastFocused;
@@ -219,6 +275,7 @@ namespace UI_Resource_Themer
         #region Public Fields
         public Color BoxColor { get => boxColor; set { boxColor = value; InvalidateVisual(); } }
         public Point LastPoint { get; private set; }
+        public Point LastParentPoint { get; private set; }
         public static CControl LastFocused
         {
             get => lastFocused;
@@ -240,6 +297,19 @@ namespace UI_Resource_Themer
             DefaultStyleKeyProperty.OverrideMetadata(typeof(CControl), new FrameworkPropertyMetadata(typeof(CControl)));
         }
 
+        //~CControl()
+        //{
+        //    GC.Collect();
+        //}
+
+        public static void ClearActiveControls()
+        {
+            foreach (var cc in ctlsActive)
+                cc.IsDeleted = true;
+
+            ctlsActive.Clear();
+        }
+
         public CControl()
         {
             actualname = Name;
@@ -250,26 +320,48 @@ namespace UI_Resource_Themer
 
             ClipToBounds = true;
 
-            wide = "64";
-            tall = "24";
+            Loaded += Load;
+        }
 
-            Loaded += (o, e) =>
+        private void Load(object sender, RoutedEventArgs e)
+        {
+            var xtemp = xpos;
+            xpos = "0";
+            xpos = xtemp;
+
+            ctlsActive.Add(this);
+            ControlAddedRemoved?.Invoke(this, EventArgs.Empty);
+
+            //LastFocused = this;
+            LastPoint = new Point(Canvas.GetLeft(this), Canvas.GetTop(this));
+            LastFocusedChanged += UpdateVisual;
+            Unloaded += Unload;
+        }
+
+        private void UpdateVisual(object sender, EventArgs e)
+        {
+            InvalidateVisual();
+        }
+
+        private void Unload(object sender, RoutedEventArgs e)
+        {
+            if (IsDeleted)
             {
-                ctlsActive.Add(this);
-                ControlAddedRemoved?.Invoke(this, EventArgs.Empty);
+                if (Util.SelectedControls.Contains(this))
+                    Util.SelectedControls.Remove(this);
 
-                //LastFocused = this;
-                LastPoint = new Point(Canvas.GetLeft(this), Canvas.GetTop(this));
-                LastFocusedChanged += (obj, ev) => InvalidateVisual();
+                if (LastFocused == this)
+                    LastFocused = null;
 
-                //OldParent. += (obj, ev) => MessageBox.Show("!!!");
-            };
-
-            Unloaded += (o, e) =>
-            {
                 ctlsActive.Remove(this);
                 ControlAddedRemoved?.Invoke(this, EventArgs.Empty);
-            };
+
+                Loaded -= Load;
+                LastFocusedChanged -= UpdateVisual;
+                Unloaded -= Unload;
+
+                //GC.Collect();
+            }
         }
 
         protected override void OnPropertyChanged(DependencyPropertyChangedEventArgs e)
@@ -287,17 +379,84 @@ namespace UI_Resource_Themer
             base.OnPropertyChanged(e);
         }
 
-        protected override void OnMouseDown(MouseButtonEventArgs e)
+        protected override void OnMouseLeftButtonUp(MouseButtonEventArgs e)
         {
-            if (IsEnabled && e.LeftButton == MouseButtonState.Pressed)
+            if (isMouseDown)
             {
+                isMouseDown = false;
+
                 Focus();
                 LastFocused = this;
+
+                if (!Util.IsCtrlUp)
+                {
+                    //if (this is CFrame)
+                    //{
+                    //    if ((this as CFrame).Content == Util.OutermostParent)
+                    //        return;
+                    //}
+
+                    IsMultiSelected = !IsMultiSelected;
+
+                    if (!ismultiselected)
+                    {
+                        if (Util.SelectedControls.Contains(this))
+                            Util.SelectedControls.Remove(this);
+
+                        LastFocused = null;
+                    }
+                    else
+                        Util.SelectedControls.Add(this);
+                }
+            }
+
+            base.OnMouseLeftButtonUp(e);
+        }
+
+        protected override void OnMouseDown(MouseButtonEventArgs e)
+        {
+            if (e.LeftButton == MouseButtonState.Pressed)
+            {
+                isMouseDown = true;
                 LastPoint = e.GetPosition(this);
+                LastParentPoint = e.GetPosition(Util.OriginalParent);
             }
 
             base.OnMouseDown(e);
         }
+
+        //protected override void OnMouseDown(MouseButtonEventArgs e)
+        //{
+        //    if (IsEnabled && e.LeftButton == MouseButtonState.Pressed)
+        //    {
+        //        Focus();
+        //        LastFocused = this;
+        //        LastPoint = e.GetPosition(this);
+
+        //        if (!Util.IsCtrlUp)
+        //        {
+        //            if (this is CFrame)
+        //            {
+        //                if ((this as CFrame).Content == Util.OutermostParent)
+        //                    return;
+        //            }
+
+        //            IsMultiSelected = !IsMultiSelected;
+
+        //            if (!ismultiselected)
+        //            {
+        //                if (Util.SelectedControls.Contains(this))
+        //                    Util.SelectedControls.Remove(this);
+
+        //                LastFocused = null;
+        //            }
+        //            else
+        //                Util.SelectedControls.Add(this);
+        //        }
+        //    }
+
+        //    base.OnMouseDown(e);
+        //}
 
         protected override void OnKeyDown(KeyEventArgs e)
         {
@@ -307,6 +466,10 @@ namespace UI_Resource_Themer
             {
                LastFocused = null;
                InvalidateVisual();
+
+                foreach (var cc in Util.SelectedControls)
+                    cc.IsMultiSelected = false;
+                Util.SelectedControls.Clear();
 
                 e.Handled = true;
                 return;
@@ -324,34 +487,75 @@ namespace UI_Resource_Themer
                     if (LastFocused == null)
                         break;
 
-                    var parent = Parent;
-
-                    if (parent != null && parent is Canvas)
+                    foreach (var cc in Util.SelectedControls)
                     {
-                        (parent as Canvas).Children.Remove(this);
-                        LastFocused = null;
+                        var parent = cc.Parent;
+
+                        if (parent != null && parent is Canvas)
+                        {
+                            if (cc is CFrame && (cc as CFrame).Content == Util.OutermostParent)
+                                continue;
+
+                            (parent as Canvas).Children.Remove(cc);
+
+                            cc.IsDeleted = true;
+                            cc.IsMultiSelected = false;
+
+                            if (ctlsActive.Contains(cc))
+                                ctlsActive.Remove(cc);
+                        }
+
+                        //if (parent != null && parent is Canvas && parent != Util.OriginalParent && Util.OriginalParent != Util.OutermostParent)
+                        //    (parent as Canvas).Children.Remove(cc);
                     }
 
+                    Util.SelectedControls.Clear();
+
+                    var outerParent = Parent;
+
+                    if (outerParent != null && outerParent is Canvas)
+                    {
+                        if (this is CFrame && (this as CFrame).Content == Util.OutermostParent)
+                            break;
+
+                        (outerParent as Canvas).Children.Remove(this);
+                    }
+
+                    IsMultiSelected = false;
+                    IsDeleted = true;
+
+                    if (ctlsActive.Contains(this))
+                        ctlsActive.Remove(this);
+
+                    LastFocused = null;
                     break;
 
                 case Key.Left:
-                    if (!xpos.StartsWith("c") && !xpos.StartsWith("r"))
+                    if (!LockX && !xpos.StartsWith("c") && !xpos.StartsWith("r"))
                         xpos = (GetActualX - 1) + "";
+
+                    Util.BatchMove(-1, 0);
                     break;
 
                 case Key.Right:
-                    if (!xpos.StartsWith("c") && !xpos.StartsWith("r"))
+                    if (!LockX && !xpos.StartsWith("c") && !xpos.StartsWith("r"))
                         xpos = (GetActualX + 1) + "";
+
+                    Util.BatchMove(1, 0);
                     break;
 
                 case Key.Up:
-                    if (!ypos.StartsWith("c"))
+                    if (!LockY && !ypos.StartsWith("c"))
                         ypos = (GetActualY - 1) + "";
+
+                    Util.BatchMove(0, -1);
                     break;
 
                 case Key.Down:
-                    if (!ypos.StartsWith("c"))
+                    if (!LockY && !ypos.StartsWith("c"))
                         ypos = (GetActualY + 1) + "";
+
+                    Util.BatchMove(0, 1);
                     break;
             }
 
@@ -365,7 +569,7 @@ namespace UI_Resource_Themer
             var pen = new Pen(new SolidColorBrush(boxColor), 1);
             var brush = Brushes.Transparent;
 
-            if (LastFocused != null && (LastFocused == this || IsFocused))
+            if (ismultiselected || LastFocused != null && (LastFocused == this || IsFocused))
             {
                 pen.Brush = new SolidColorBrush(Color.FromRgb(255, 0, 0));
                 brush = new SolidColorBrush(Color.FromArgb(100, 93, 173, 226));
@@ -373,6 +577,17 @@ namespace UI_Resource_Themer
 
             var rect = new Rect(RenderSize);
             drawingContext.DrawRectangle(brush, pen, rect);
+
+            if (LastFocused == this)
+            {
+                var rectG = new RectangleGeometry
+                {
+                    Rect = new Rect(rect.Width / 2 - 2, rect.Height / 2 - 2, 4, 4),
+                    Transform = new RotateTransform(45, rect.Width / 2, rect.Height / 2)
+                };
+
+                drawingContext.DrawGeometry(brush, pen, rectG);
+            }
         }
     }
 }

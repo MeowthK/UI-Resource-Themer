@@ -1,7 +1,11 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 using System.Windows;
+using System.Windows.Controls;
+using System.Windows.Documents;
 using System.Windows.Media;
+using System.Windows.Media.Imaging;
 
 namespace UI_Resource_Themer
 {
@@ -37,9 +41,12 @@ namespace UI_Resource_Themer
     public class CBitmapImagePanel : CControl
     {
         private string img = string.Empty;
-        private ImageSource imgsrc = null;
-        private string imgcolor = "0 0 0 0";
+        private string imgcolor = "0 0 0 255";
         private string scaleimg = "1";
+        private string type;
+        //private static readonly BitmapImage defaultImage = new BitmapImage(new Uri(@"pack://application:,,,/defaultimg.png", UriKind.Absolute));
+
+        public ImageSource ImageSource { get; private set; } = null;
 
         public string scaleimage
         {
@@ -52,7 +59,7 @@ namespace UI_Resource_Themer
                 {
                     scaleimg = trimmedVal;
 
-                    if (imgsrc != null)
+                    if (ImageSource != null)
                         InvalidateVisual();
                 }
             }
@@ -67,14 +74,53 @@ namespace UI_Resource_Themer
                 if (Util.DesignMode || img == value.Trim())
                     return;
 
-                var temp = value.Trim();
-                imgsrc = Util.ConvertTGAToPNG(temp);
+                img = value.Trim();
+                var imgtemp = Util.ConvertTGAToPNG(img);
+
+                if (imgtemp == null)
+                {
+                    //imgtemp = defaultImage;
+                    if (type == "CBitmapImagePanel")
+                        OpacityMask = null;
+                    ImageSource = null;
+
+                    InvalidateVisual();
+                    return;
+                    //imgtemp = 
+                    //OpacityMask = null;
+                    //Background = Brushes.Black;
+                    //LastFocused = null;
+                    //return;
+                }
+
+                ImageSource = imgtemp;
+
+                if (type == "CBitmapImagePanel")
+                    if (ImageSource != null)
+                        OpacityMask = new ImageBrush(ImageSource);
+
+                ImageSource.Freeze();
+
                 InvalidateVisual();
-                img = temp;
             }
         }
 
-        public string imagecolor { get => imgcolor; set { imgcolor = value; InvalidateVisual(); } }
+        public string imagecolor { get => imgcolor;
+            set
+            {
+                if (imgcolor != value)
+                {
+                    imgcolor = value;
+
+                    if (imgcolor.ToLower() == "titleicon")
+                        Background = Util.DefaultFG;
+                    else
+                        Background = new SolidColorBrush(Util.StringToColor(imgcolor));
+
+                    InvalidateVisual();
+                }
+            }
+        }
 
         static CBitmapImagePanel()
         {
@@ -83,29 +129,83 @@ namespace UI_Resource_Themer
 
         public CBitmapImagePanel()
         {
+            type = GetType().Name;
+
+            Background = Brushes.Black;
+            //ImageSource = defaultImage;
+
+            if (type == "CBitmapImagePanel")
+                OpacityMask = new ImageBrush(ImageSource);
+
+            //Loaded += (o, e) => 
+
             Unloaded += (o, e) =>
             {
-                imgsrc = null;
-                GC.Collect();
+                if (IsDeleted)
+                    ImageSource = null;
             };
+        }
+
+        protected override void OnGotFocus(RoutedEventArgs e)
+        {
+            base.OnGotFocus(e);
+
+            if (type == "CBitmapImagePanel")
+            {
+                OpacityMask = null;
+                Background = Brushes.Transparent;
+            }
+        }
+
+        protected override void OnLostFocus(RoutedEventArgs e)
+        {
+            base.OnLostFocus(e);
+
+            if (type == "CBitmapImagePanel")
+            {
+                OpacityMask = new ImageBrush(ImageSource ?? null);
+
+                if (imgcolor.ToLower() == "titleicon")
+                    Background = Util.DefaultFG;
+                else
+                    Background = new SolidColorBrush(Util.StringToColor(imgcolor));
+            }
         }
 
         protected override void OnRender(DrawingContext drawingContext)
         {
-            if (imgsrc != null)
+            if (type == "CBitmapImagePanel")
             {
-                var rect = new Rect(RenderSize);
-
-                drawingContext.DrawRectangle(new SolidColorBrush(Util.StringToColor(imgcolor)), Util.EmptyPen, rect);
-
-                rect.X = 0;
-                rect.Y = 0;
-                rect.Width = scaleimage != "0" ? Width : imgsrc.Width;
-                rect.Height = scaleimage != "0" ? Height : imgsrc.Height;
-                drawingContext.DrawImage(imgsrc, rect);
+                if (ImageSource != null)
+                    drawingContext.DrawImage(ImageSource, new Rect(RenderSize));
             }
 
             base.OnRender(drawingContext);
         }
+
+        //protected override void OnRender(DrawingContext drawingContext)
+        //{
+        //    if (type == "CBitmapImagePanel")
+        //        Background = IsFocused ? SelectionBrush : new SolidColorBrush(bgcolor);
+        //    //if (ImageSource != null)
+        //    //{
+        //    //    //var rect = new Rect(RenderSize)
+        //    //    //{
+        //    //    //    //drawingContext.DrawRectangle(new SolidColorBrush(Util.StringToColor(imgcolor)), Util.EmptyPen, rect);
+
+        //    //    //    X = 0,
+        //    //    //    Y = 0,
+        //    //    //    Width = scaleimage != "0" ? Width : imgsrc.Width,
+        //    //    //    Height = scaleimage != "0" ? Height : imgsrc.Height
+        //    //    //};
+
+        //    //    //drawingContext.DrawImage(imgsrc, rect);
+
+        //    //    ////if (!imgsrc.IsFrozen)
+        //    //    ////    imgsrc.Freeze();
+        //    //}
+
+        //    base.OnRender(drawingContext);
+        //}
     }
 }

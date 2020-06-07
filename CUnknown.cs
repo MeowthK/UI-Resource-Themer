@@ -40,6 +40,11 @@ namespace UI_Resource_Themer
             DefaultStyleKeyProperty.OverrideMetadata(typeof(CUnknown), new FrameworkPropertyMetadata(typeof(CUnknown)));
         }
 
+        public CUnknown()
+        {
+            BoxColor = Color.FromArgb(100, 255, 0, 0);
+        }
+
         protected override void OnRender(DrawingContext drawingContext)
         {
             var format = new FormattedText("???", CultureInfo.CurrentCulture, FlowDirection.LeftToRight, new Typeface("Verdana Italic"), Util.EmSize, Util.DefaultFG);

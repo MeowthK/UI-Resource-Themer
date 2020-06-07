@@ -1,13 +1,10 @@
 ﻿using Microsoft.Win32;
 using System;
-using System.Collections;
 using System.Collections.Generic;
-using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.IO;
 using System.Linq;
 using System.Reflection;
-using System.Security.Policy;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
@@ -25,7 +22,8 @@ namespace UI_Resource_Themer
         public static readonly Brush DefaultBG = new SolidColorBrush(Color.FromArgb(128, 0, 0, 0));
         public static readonly Brush DefaultFG = new SolidColorBrush(Color.FromArgb(255, 255, 174, 0));
         public static readonly Pen EmptyPen = new Pen(new SolidColorBrush(Color.FromArgb(0, 0, 0, 0)), 0);
-        //public static readonly TextBlock TitleFont = new TextBlock();
+        public static readonly HashSet<CControl> SelectedControls = new HashSet<CControl>();
+        public static bool IsCtrlUp = true;
 
         public static string HomeDir { get; set; }
         public static string WorkDir { get; set; }
@@ -33,6 +31,7 @@ namespace UI_Resource_Themer
         public static CControl ContainerControl { get; set; } = null;
         public static LoadingDialog LoadDialog { get; set; }
 
+        public static CControl CopiedControl { get; set; }
         public static readonly Color EmptyColor = Color.FromArgb(0, 0, 0, 0);
         public static readonly double EmSize = 10.0;
         public static readonly double LabelMargin = 6.0;
@@ -40,6 +39,8 @@ namespace UI_Resource_Themer
         public static Canvas OriginalParent { get; set; }
 
         public static int ErrorInt = -32767;
+
+        public static int MaxZ { get; private set; } = 0;
 
         private static string topMostHeader = string.Empty;
         private static readonly Dictionary<string, Type> controlTypes = new Dictionary<string, Type>
@@ -68,12 +69,21 @@ namespace UI_Resource_Themer
             //TitleFont.FontSize = 14.0;
         }
 
+        public static void ArrangeSelectedControls(bool ToFront = true)
+        {
+            foreach (var cc in SelectedControls)
+                ArrangeControl(cc, ToFront);
+
+            if (CControl.LastFocused != null)
+                ArrangeControl(CControl.LastFocused, ToFront);
+        }
+
         public static void ArrangeControl(CControl control, bool ToFront = true, bool Extreme = false)
         {
-            if (control == null || !(control.Parent is Canvas parent))
+            if (control == null || !(control.Parent is Canvas))
                 return;
 
-            if (control is CFrame)
+            if (control is CFrame && (control as CFrame).Content == OutermostParent)
                 return;
 
             var zidx = Panel.GetZIndex(control) + (ToFront ? 1 : -1);
@@ -84,6 +94,146 @@ namespace UI_Resource_Themer
             Panel.SetZIndex(control, zidx);
         }
 
+        public static void ClearSelection()
+        {
+            foreach (var cc in SelectedControls)
+                cc.IsMultiSelected = false;
+
+            SelectedControls.Clear();
+        }
+
+        public static void CopyControl(CControl control)
+        {
+            if (control == null)
+            {
+                CopiedControl = null;
+                return;
+            }
+
+            if (control is CFrame && (control as CFrame).Content == OutermostParent)
+            {
+                CopiedControl = null;
+                return;
+            }
+
+            CopiedControl = control;
+            CopiedControl.DataContext = control.Parent;
+        }
+
+        public static void PasteControl()
+        {
+            if (CopiedControl == null)
+                return;
+
+            var parent = CopiedControl.DataContext as Canvas;
+
+            var copy = CopiedControl.GetClone;
+            parent.Children.Add(copy);
+            Panel.SetZIndex(copy, Panel.GetZIndex(CopiedControl) + 1);
+
+            AddExtendedAttributes(CopiedControl, copy);
+
+            CControl.LastFocused = copy;
+            copy.Focus();
+        }
+
+        public static void PasteControls()
+        {
+            var selectedTemp = new CControl[SelectedControls.Count];
+            SelectedControls.CopyTo(selectedTemp);
+
+            foreach (var cc in SelectedControls)
+                cc.IsMultiSelected = false;
+            SelectedControls.Clear();
+
+            foreach (var cc in selectedTemp)
+            {
+                if (cc == CopiedControl)
+                    continue;
+
+                var copy = cc.GetClone;
+                (cc.Parent as Canvas).Children.Add(copy);
+                Panel.SetZIndex(copy, Panel.GetZIndex(cc));
+
+                AddExtendedAttributes(cc, copy);
+
+                copy.IsMultiSelected = true;
+                SelectedControls.Add(copy);
+            }
+        }
+
+        public static void AddExtendedAttributes(CControl _base, CControl _derived)
+        {
+            //var parent = CopiedControl.DataContext as Canvas;
+
+            //_derived.fieldname = _base.fieldname + "-Copy"; //GetFactoryName(_derived, parent);
+
+            int idx = 1;
+            for (int i = 0; i < (_base.Parent as Canvas).Children.Count; i++)
+            {
+                var child = (_base.Parent as Canvas).Children[i];
+
+                if (child is CCanvas || child == _base)
+                    continue;
+
+                if ((child as CControl).fieldname == _base.fieldname + "-" + idx)
+                {
+                    idx++;
+                    i = 0;
+                }
+            }
+
+            _derived.fieldname = _base.fieldname + "-" + idx;
+            _derived.xpos = _base.xpos;
+            _derived.ypos = _base.ypos;
+
+            //_derived.xpos = (int)(parent.Width / 2 - _derived.Width / 2) + "";
+            //_derived.ypos = (int)(parent.Height / 2 - _derived.Height / 2) + "";
+
+            switch (_base.GetType().Name)
+            {
+                case "CBitmapImagePanel":
+                    var cbmpB = _base as CBitmapImagePanel;
+                    var cbmp = _derived as CBitmapImagePanel;
+
+                    cbmp.scaleimage = cbmpB.scaleimage;
+                    cbmp.image = cbmpB.image;
+                    cbmp.imagecolor = cbmpB.imagecolor;
+                    break;
+
+                case "CButton":
+                case "CMouseOverPanelButton":
+                    var cbtnB = _base as CButton;
+                    var cbtn = _derived as CButton;
+
+                    cbtn.labeltext = cbtnB.labeltext;
+                    cbtn.command = cbtnB.command;
+                    cbtn.textalignment = cbtnB.textalignment;
+                    cbtn.font = cbtnB.font;
+                    cbtn.paintbackground = cbtnB.paintbackground;
+                    break;
+
+                case "CImagePanel":
+                    var cimgB = _base as CImagePanel;
+                    var cimg = _derived as CImagePanel;
+
+                    cimg.scaleimage = cimgB.scaleimage;
+                    cimg.image = cimgB.image;
+                    cimg.imagecolor = cimgB.imagecolor;
+                    cimg.fillcolor = cimgB.fillcolor;
+                    break;
+
+                case "CLabel":
+                    var clblB = _base as CLabel;
+                    var clbl = _derived as CLabel;
+
+                    clbl.labeltext = clblB.labeltext;
+                    clbl.font = clblB.font;
+                    clbl.textalignment = clblB.textalignment;
+                    break;
+            }
+        }
+
         public static void SaveFile()
         {
             if (OriginalFileName == string.Empty)
@@ -92,7 +242,11 @@ namespace UI_Resource_Themer
                 return;
             }
 
-            string contents = topMostHeader + "\n{\n";
+            string contents =
+                "// File was generated using CS 1.6 Resource UI Themer\n" +
+                "// Created by Meowth ('https://gamebanana.com/members/1454821')\n\n";
+
+            contents += topMostHeader + "\n{\n";
 
             if (ContainerControl != null)
             {
@@ -100,12 +254,14 @@ namespace UI_Resource_Themer
 
                 contents += "\t\"" + (cchild.headerName == null || cchild.headerName == string.Empty ? cchild.fieldname : cchild.headerName) + "\"\n\t{\n";
 
-                contents += "\t\t" + GenerateAttr("ControlName", cchild.controlname) + "\n";
-                contents += "\t\t" + GenerateAttr("fieldName", cchild.fieldname)     + "\n";
-                contents += "\t\t" + GenerateAttr("xpos", cchild.xpos)               + "\n";
-                contents += "\t\t" + GenerateAttr("ypos", cchild.ypos)               + "\n";
-                contents += "\t\t" + GenerateAttr("wide", cchild.wide)               + "\n";
-                contents += "\t\t" + GenerateAttr("tall", cchild.tall)               + "\n";
+                contents += GenerateAttr("ControlName", cchild.controlname);
+                contents += GenerateAttr("fieldName", cchild.fieldname);
+                contents += GenerateAttr("xpos", cchild.xpos);
+                contents += GenerateAttr("ypos", cchild.ypos);
+                contents += GenerateAttr("wide", cchild.wide);
+                contents += GenerateAttr("tall", cchild.tall);
+                contents += GenerateAttr("enabled", cchild.enabled);
+                contents += GenerateAttr("visible", cchild.visible);
 
                 contents += GenerateExtentendAttrs(cchild);
                 contents += cchild.GetUnknownAttrs;
@@ -114,11 +270,14 @@ namespace UI_Resource_Themer
             }
 
             var childOrdered = new List<UIElement>();
+            var children = new UIElement[OriginalParent.Children.Count];
+            OriginalParent.Children.CopyTo(children, 0);
 
-            foreach (UIElement child in OutermostParent.Children)
+            foreach (UIElement child in children)
                 childOrdered.Add(child);
 
-            childOrdered.Sort(new ZIndexSorter());
+            childOrdered.Remove(ContainerControl);
+            //childOrdered.Sort(new ZIndexSorter());
 
             GenerateScope(ref contents, childOrdered.ToArray());
 
@@ -136,7 +295,7 @@ namespace UI_Resource_Themer
             sfd.FileOk += (obj, ev) =>
             {
                 File.WriteAllText(sfd.FileName, contents);
-                MessageBox.Show("Saved: " + sfd.FileName);
+                MessageBox.Show("File " + sfd.FileName + " saved successfully.", "File Saved");
             };
 
             sfd.ShowDialog();
@@ -150,30 +309,31 @@ namespace UI_Resource_Themer
             {
                 case "BitmapImagePanel":
                     var bmpnl = ccontrol as CBitmapImagePanel;
-                    ret += "\t\t" + GenerateAttr("image", bmpnl.image)           + "\n";
-                    ret += "\t\t" + GenerateAttr("imagecolor", bmpnl.imagecolor) + "\n";
+                    ret += GenerateAttr("image", bmpnl.image);
+                    ret += GenerateAttr("imagecolor", bmpnl.imagecolor);
                     break;
 
                 case "Button":
+                case "MouseOverPanelButton":
                     var btn = ccontrol as CButton;
-                    ret += "\t\t" + GenerateAttr("labelText", btn.labeltext)             + "\n";
-                    ret += "\t\t" + GenerateAttr("command", btn.command)                 + "\n";
-                    ret += "\t\t" + GenerateAttr("textAlignment", btn.textalignment)     + "\n";
-                    ret += "\t\t" + GenerateAttr("font", btn.font)                       + "\n";
-                    ret += "\t\t" + GenerateAttr("paintbackground", btn.paintbackground) + "\n";
+                    ret += GenerateAttr("labelText", btn.labeltext);
+                    ret += GenerateAttr("command", btn.command);
+                    ret += GenerateAttr("textAlignment", btn.textalignment);
+                    ret += GenerateAttr("font", btn.font);
+                    ret += GenerateAttr("paintbackground", btn.paintbackground);
                     break;
 
                 case "ImagePanel":
                     var imgpnl = ccontrol as CImagePanel;
-                    ret += "\t\t" + GenerateAttr("image", imgpnl.image)           + "\n";
-                    ret += "\t\t" + GenerateAttr("scaleimage", imgpnl.scaleimage) + "\n";
+                    ret += GenerateAttr("image", imgpnl.image);
+                    ret += GenerateAttr("scaleimage", imgpnl.scaleimage);
                     break;
 
                 case "Label":
                     var lbl = ccontrol as CLabel;
-                    ret += "\t\t" + GenerateAttr("labelText", lbl.labeltext)         + "\n";
-                    ret += "\t\t" + GenerateAttr("font", lbl.font)                   + "\n";
-                    ret += "\t\t" + GenerateAttr("textAlignment", lbl.textalignment) + "\n";
+                    ret += GenerateAttr("labelText", lbl.labeltext);
+                    ret += GenerateAttr("font", lbl.font);
+                    ret += GenerateAttr("textAlignment", lbl.textalignment);
                     break;
             }
 
@@ -182,23 +342,35 @@ namespace UI_Resource_Themer
 
         public static void GenerateScope(ref string retVal, UIElement[] controls)
         {
+            Array.Sort(controls, new ZIndexSorter());
+
             foreach (UIElement child in controls)
             {
                 if (child is CCanvas)
+                {
+                    var cnv = child as CCanvas;
+                    var arr = new UIElement[cnv.Children.Count];
+                    cnv.Children.CopyTo(arr, 0);
+
+                    GenerateScope(ref retVal, arr);
                     continue;
+                }
 
                 var cchild = child as CControl;
 
+                if (cchild.Discard)
+                    continue;
+
                 retVal += "\t\"" + (cchild.headerName == null || cchild.headerName == string.Empty ? cchild.fieldname : cchild.headerName) + "\"\n\t{\n";
 
-                retVal += "\t\t" + GenerateAttr("ControlName", cchild.controlname) + "\n";
-                retVal += "\t\t" + GenerateAttr("fieldName", cchild.fieldname)     + "\n";
-                retVal += "\t\t" + GenerateAttr("xpos", cchild.xpos)               + "\n";
-                retVal += "\t\t" + GenerateAttr("ypos", cchild.ypos)               + "\n";
-                retVal += "\t\t" + GenerateAttr("wide", cchild.wide)               + "\n";
-                retVal += "\t\t" + GenerateAttr("tall", cchild.tall)               + "\n";
-                retVal += "\t\t" + GenerateAttr("enabled", cchild.enabled)         + "\n";
-                retVal += "\t\t" + GenerateAttr("visible", cchild.visible)         + "\n";
+                retVal += GenerateAttr("ControlName", cchild.controlname);
+                retVal += GenerateAttr("fieldName", cchild.fieldname);
+                retVal += GenerateAttr("xpos", cchild.xpos);
+                retVal += GenerateAttr("ypos", cchild.ypos);
+                retVal += GenerateAttr("wide", cchild.wide);
+                retVal += GenerateAttr("tall", cchild.tall);
+                retVal += GenerateAttr("enabled", cchild.enabled);
+                retVal += GenerateAttr("visible", cchild.visible);
 
                 retVal += GenerateExtentendAttrs(cchild);
                 retVal += cchild.GetUnknownAttrs;
@@ -212,10 +384,13 @@ namespace UI_Resource_Themer
 
         public static string GenerateAttr(string attr, string val)
         {
-            return "\"" + attr + "\"\t\t" + "\"" + val + "\"";
+            if (val == null || val.Trim().Length == 0)
+                return string.Empty;
+
+            return "\t\t" + "\"" + attr + "\"\t\t" + "\"" + val + "\"" + "\n";
         }
 
-        public static CControl[] ParseFile(string resPath)
+        public static CControl[] ParseFile(string resPath, bool UpdateHeader = true)
         {
             if (!File.Exists(resPath))
             {
@@ -234,14 +409,13 @@ namespace UI_Resource_Themer
             }
 
             HomeDir = rootDir;
-            string[] lines = RemoveOutermostScope(RemoveComments(File.ReadAllLines(resPath)));
+            string[] lines = RemoveOutermostScope(RemoveComments(File.ReadAllLines(resPath)), UpdateHeader);
 
             if (lines.Length < 3)
                 return new CControl[0];
 
             var ccontrolList = new List<CControl>();
 
-            int zindex = 0;
             for (int idx = 0; idx < lines.Length; idx++)
             {
                 var ccontrol = GetScope(lines, ref idx);
@@ -250,8 +424,13 @@ namespace UI_Resource_Themer
                     break;
 
                 ccontrolList.Add(ccontrol);
-                Panel.SetZIndex(ccontrol, zindex++);
+                //Panel.SetZIndex(ccontrol, zindex++);
             }
+
+            MaxZ = 0;
+            foreach (var cc in ccontrolList)
+                Panel.SetZIndex(cc, MaxZ++);
+            MaxZ++;
 
             return ccontrolList.ToArray();
         }
@@ -263,19 +442,22 @@ namespace UI_Resource_Themer
             Canvas.SetTop(control, GetOffset(control, control.ypos, false));
         }
 
-        private static string[] RemoveOutermostScope(string[] lines)
+        private static string[] RemoveOutermostScope(string[] lines, bool UpdateHeader = true)
         {
-            for (int i = 0; i < lines.Length; i++)
+            if (UpdateHeader)
             {
-                var line = lines[i].Trim();
-
-                if (line.StartsWith("//"))
-                    continue;
-
-                if (line.StartsWith("\""))
+                for (int i = 0; i < lines.Length; i++)
                 {
-                    topMostHeader = line;
-                    break;
+                    var line = lines[i].Trim();
+
+                    if (line.StartsWith("//"))
+                        continue;
+
+                    if (line.StartsWith("\""))
+                    {
+                        topMostHeader = line;
+                        break;
+                    }
                 }
             }
 
@@ -298,6 +480,21 @@ namespace UI_Resource_Themer
             Array.Copy(lines, startIndex, newlines, 0, endIndex - startIndex);
 
             return newlines;
+        }
+
+        public static void BatchMove(int diffX, int diffY)
+        {
+            foreach (var cc in SelectedControls.Where(p => p != CControl.LastFocused))
+            {
+                if (cc.Locked || cc.enabled != "1")
+                    continue;
+
+                if (!(cc.xpos.StartsWith("c") || cc.xpos.StartsWith("r")))
+                    cc.xpos = (cc.GetActualX + diffX) + "";
+
+                if (!cc.ypos.StartsWith("c"))
+                    cc.ypos = (cc.GetActualY + diffY) + "";
+            }
         }
 
         public static string[] RemoveComments(string[] lines)
@@ -372,7 +569,6 @@ namespace UI_Resource_Themer
                 }
 
                 attr = attr.Trim();
-                val = val.Trim();
 
                 if (line.ToLower().Contains("controlname") && control == null)
                 {
@@ -381,9 +577,10 @@ namespace UI_Resource_Themer
 
                     control = ob as CControl;
                     control.controlname = val;
-                    control.headerName = tempHeader.Trim().Replace("\"", "");
+
+                    //control.headerName = tempHeader.Trim().Replace("\"", "");
                 }
-                else if (control != null)
+                else if (control != null && val.Length > 0)
                 {
                     var type = control.GetType();
 
@@ -405,6 +602,15 @@ namespace UI_Resource_Themer
                 }
 
                 idx++;
+            }
+
+            if (control != null)
+            {
+                var header = tempHeader.Trim().Replace("\"", "");
+                if (header != control.fieldname)
+                    control.headerName = header;
+                else
+                    control.headerName = string.Empty;
             }
 
             return control;
@@ -439,16 +645,18 @@ namespace UI_Resource_Themer
 
             var success = int.TryParse(input, out int inputval);
 
+            //SetParent(control);
+
             if (success)
-            {
-                SetParent(control);
                 return inputval;
-            }
 
-            SetParent(control);
+            //if (!(control.Parent is Canvas parent))
+            //    parent = OriginalParent;
 
-            if (!(control.Parent is Canvas parent))
-                parent = OriginalParent;
+            var parent = control.Parent as Canvas;
+
+            if (parent == null)
+                return 0;
 
             if (input.StartsWith("c"))
             {
@@ -482,18 +690,28 @@ namespace UI_Resource_Themer
             //MessageBox.Show("Current Parent: " + (control.Parent as Canvas).Name + "\n" +
             //                "Reserved Parent: " + (control.OldParent as Canvas).Name);
 
+            //if (Parent == OriginalParent && control.OldParent == OriginalParent)
+            //    return;
+
             if (x.Contains('c') || x.Contains('r'))
             {
-                if (Parent is CCanvas)
+                if (Parent != null && Parent != OriginalParent)
                 {
-                    if (!OriginalParent.Children.Contains(control))
-                    {
-                        (Parent as CCanvas).Children.Remove(control);
-
-                        OriginalParent.Children.Add(control);
-                        control.Visibility = Visibility.Visible;
-                    }
+                    (Parent as Canvas).Children.Remove(control);
+                    OriginalParent.Children.Add(control);
+                    //control.visible = "1";
                 }
+
+                //if (Parent is Canvas)
+                //{
+                //    if (!OriginalParent.Children.Contains(control))
+                //    {
+                //        (Parent as Canvas).Children.Remove(control);
+
+                //        OriginalParent.Children.Add(control);
+                //        control.Visibility = Visibility.Visible;
+                //    }
+                //}
             }
             else
             {
@@ -504,7 +722,7 @@ namespace UI_Resource_Themer
                         (control.Parent as Canvas).Children.Remove(control);
 
                         control.OldParent.Children.Add(control);
-                        control.Visibility = Visibility.Visible;
+                        //control.Visibility = Visibility.Visible;
                     }
                 }
             }
@@ -551,6 +769,40 @@ namespace UI_Resource_Themer
                     using (var fstream = new FileStream(tgaFile, FileMode.Open, FileAccess.Read, FileShare.Read))
                     using (var reader = new BinaryReader(fstream))
                         imgsrc = new TgaLib.TgaImage(reader).GetBitmap();
+
+                    //if (imgsrc != null && (imgsrc.Width > 256 || imgsrc.Height > 256))
+                    //{
+                    //    if (imgsrc.Width <= 276)
+                    //    {
+                    //        if (imgsrc.Height > 96)
+                    //        {
+                    //            MessageBox.Show(imagepath + ": " + "Maximum allowed height for width:276 is 96.", "Image Update Blocked");
+                    //            return null;
+                    //        }
+                    //    }
+                    //    else
+                    //    {
+                    //        MessageBox.Show(imagepath + ": " + "Maximum allowed size for TARGA is 256x256.", "Image Update Blocked");
+                    //        return null;
+                    //    }
+
+                    //    if (imgsrc.Height <= 276)
+                    //    {
+                    //        if (imgsrc.Width > 96)
+                    //        {
+                    //            MessageBox.Show(imagepath + ": " + "Maximum allowed width for height:276 is 96.", "Image Update Blocked");
+                    //            return null;
+                    //        }
+                    //    }
+                    //    else
+                    //    {
+                    //        MessageBox.Show(imagepath + ": " + "Maximum allowed size for TARGA is 256x256.", "Image Update Blocked");
+                    //        return null;
+                    //    }
+
+                    //    //MessageBox.Show(imagepath + ": " + "Maximum allowed size for TARGA is 256x256", "Image Update Blocked");
+                    //    //return null;
+                    //}
                 }
                 #endregion
 
@@ -683,8 +935,11 @@ namespace UI_Resource_Themer
             return GetControlName(control.GetType()) + cardinal;
         }
 
-        public static bool VerifyNameuniqueness(string name, CControl control)
+        public static bool VerifyHeaderUniqueness(string header, CControl control)
         {
+            if (!(control.Parent is Canvas) || header == null || header == string.Empty)
+                return true;
+
             foreach (UIElement child in (control.Parent as Canvas).Children)
             {
                 if (!(child is CControl))
@@ -692,7 +947,7 @@ namespace UI_Resource_Themer
 
                 var ch = child as CControl;
 
-                if (ch.fieldname == name && child != control)
+                if (ch.headerName == header && child != control)
                     return false;
             }
 

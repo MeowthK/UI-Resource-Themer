@@ -19,10 +19,20 @@
                 <ColumnDefinition Width="25"/>
             </Grid.ColumnDefinitions>
             <Label x:Name="ControlName" Foreground="#F5B041" Content="No Control Selected."/>
-            <local:CLock x:Name="Lock" Grid.Column="1" Margin="5" Visibility="Hidden"/>
+            <Button x:Name="LockToggler" Click="LockToggler_Click" Grid.Column="1" Margin="0" Padding="5" Background="{x:Null}" BorderBrush="{x:Null}">
+                <local:CLock x:Name="Lock"/>
+            </Button>
         </Grid>
         <ScrollViewer Grid.Row="2" VerticalScrollBarVisibility="Auto">
             <StackPanel x:Name="PropertyStack">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="*"/>
+                    </Grid.ColumnDefinitions>
+                    <Label Content="header" Foreground="LightGray"/>
+                    <TextBox x:Name="header" Margin="3" Grid.Column="1"/>
+                </Grid>
                 <Grid>
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="*"/>
@@ -36,7 +46,14 @@
                         <ColumnDefinition Width="*"/>
                         <ColumnDefinition Width="*"/>
                     </Grid.ColumnDefinitions>
-                    <Label Content="xpos" Foreground="LightGray"/>
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="25"/>
+                        </Grid.ColumnDefinitions>
+                        <Label Content="xpos" Foreground="LightGray"/>
+                        <local:CLock x:Name="xposLock" Grid.Column="1" CanToggleWithMouse="True" Margin="6"/>
+                    </Grid>
                     <TextBox x:Name="xpos" Margin="3" Grid.Column="1"/>
                 </Grid>
                 <Grid>
@@ -44,7 +61,14 @@
                         <ColumnDefinition Width="*"/>
                         <ColumnDefinition Width="*"/>
                     </Grid.ColumnDefinitions>
-                    <Label Foreground="LightGray" Content="ypos"/>
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="25"/>
+                        </Grid.ColumnDefinitions>
+                        <Label Foreground="LightGray" Content="ypos"/>
+                        <local:CLock x:Name="yposLock" Margin="6" CanToggleWithMouse="True" Grid.Column="1"/>
+                    </Grid>
                     <TextBox x:Name="ypos" Grid.Column="1" Margin="3"/>
                 </Grid>
                 <Grid>
@@ -52,7 +76,14 @@
                         <ColumnDefinition Width="*"/>
                         <ColumnDefinition Width="*"/>
                     </Grid.ColumnDefinitions>
-                    <Label Foreground="LightGray" Content="wide"/>
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="25"/>
+                        </Grid.ColumnDefinitions>
+                        <Label Foreground="LightGray" Content="wide"/>
+                        <local:CLock x:Name="wideLock" Margin="6" CanToggleWithMouse="True" Grid.Column="1"/>
+                    </Grid>
                     <TextBox x:Name="wide" Grid.Column="1" Margin="3"/>
                 </Grid>
                 <Grid>
@@ -60,7 +91,14 @@
                         <ColumnDefinition Width="*"/>
                         <ColumnDefinition Width="*"/>
                     </Grid.ColumnDefinitions>
-                    <Label Foreground="LightGray" Content="tall"/>
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="25"/>
+                        </Grid.ColumnDefinitions>
+                        <Label Foreground="LightGray" Content="tall"/>
+                        <local:CLock x:Name="tallLock" Margin="6" CanToggleWithMouse="True" Grid.Column="1"/>
+                    </Grid>
                     <TextBox x:Name="tall" Grid.Column="1" Margin="3"/>
                 </Grid>
                 <Grid>

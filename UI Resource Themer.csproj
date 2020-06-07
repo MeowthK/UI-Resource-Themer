@@ -205,5 +205,8 @@
   <ItemGroup>
     <Resource Include="UI Icons\CButton.png" />
   </ItemGroup>
+  <ItemGroup>
+    <Resource Include="defaultimg.png" />
+  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

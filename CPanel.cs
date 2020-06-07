@@ -62,21 +62,24 @@ namespace UI_Resource_Themer
             Content.DrawWireframe = false;
             BoxColor = Util.EmptyColor;
 
-            NameChanged += (o, e) =>
-            {
-                foreach (var en in Enum.GetValues(typeof(DefaultPanels)))
-                {
-                    if (Enum.GetName(typeof(DefaultPanels), en) == fieldname)
-                    {
-                        defaultPanel = (DefaultPanels)en;
-                        InvalidateVisual();
-                        return;
-                    }
-                }
+            NameChanged += NameChange;
+            Unloaded += (o, e) => NameChanged -= NameChange;
+        }
 
-                defaultPanel = DefaultPanels.DontCopyMyNameBecauseImJustAPlaceholder;
-                InvalidateVisual();
-            };
+        private void NameChange(object sender, EventArgs e)
+        {
+            foreach (var en in Enum.GetValues(typeof(DefaultPanels)))
+            {
+                if (Enum.GetName(typeof(DefaultPanels), en) == fieldname)
+                {
+                    defaultPanel = (DefaultPanels)en;
+                    InvalidateVisual();
+                    return;
+                }
+            }
+
+            defaultPanel = DefaultPanels.DontCopyMyNameBecauseImJustAPlaceholder;
+            InvalidateVisual();
         }
 
         protected override void OnRender(DrawingContext drawingContext)
@@ -111,7 +114,10 @@ namespace UI_Resource_Themer
             }
 
             if (tmpbmp != null)
+            {
+                tmpbmp.Freeze();
                 drawingContext.DrawImage(tmpbmp, new Rect(RenderSize));
+            }
 
             base.OnRender(drawingContext);
             #endregion

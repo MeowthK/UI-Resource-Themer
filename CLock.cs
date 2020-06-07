@@ -52,6 +52,9 @@ namespace UI_Resource_Themer
                 new BitmapImage(new Uri(@"pack://application:,,,/LockIcons/unlock.png", UriKind.Absolute)),
                 new BitmapImage(new Uri(@"pack://application:,,,/LockIcons/lock.png", UriKind.Absolute))
             };
+        //private BitmapImage bmp = null;
+
+        public bool CanToggleWithMouse { get; set; } = false;
 
         public bool IsLocked { get => isLocked;
             set
@@ -59,6 +62,7 @@ namespace UI_Resource_Themer
                 if (isLocked != value)
                 {
                     isLocked = value;
+                    //bmp = images[isLocked ? 1 : 0];
                     Source = images[isLocked ? 1 : 0];
                     LockChanged?.Invoke(this, EventArgs.Empty);
                 }
@@ -78,7 +82,9 @@ namespace UI_Resource_Themer
 
         protected override void OnMouseLeftButtonUp(MouseButtonEventArgs e)
         {
-            IsLocked = !IsLocked;
+            if (CanToggleWithMouse)
+                IsLocked = !IsLocked;
+
             base.OnMouseLeftButtonUp(e);
         }
     }

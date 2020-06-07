@@ -32,8 +32,9 @@ namespace UI_Resource_Themer
         {
             if (Util.OutermostParent == null)
             {
-                MessageBox.Show("Control Area's reference is not set. Cannot initialize toolbox.", "ControlArea Uninitialized");
-                return;
+                Util.OutermostParent = Util.OriginalParent;
+                //MessageBox.Show("Control Area's reference is not set. Cannot initialize toolbox.", "ControlArea Uninitialized");
+                //return;
             }
 
             Canvas parent = Util.OutermostParent;
@@ -45,10 +46,24 @@ namespace UI_Resource_Themer
             //    parent = (CControl.LastFocused as CFrame).Content;
 
             control.fieldname = Util.GetFactoryName(control, parent);
-            parent.Children.Add(control);
+            control.wide = "64";
+            control.tall = "24";
 
-            Canvas.SetLeft(control, parent.Width / 2 - control.Width / 2);
-            Canvas.SetTop(control, parent.Height / 2 - control.Height / 2);
+            parent.Children.Add(control);
+            control.OldParent = parent;
+
+            Panel.SetZIndex(control, Util.MaxZ);
+
+            control.xpos = (int)(parent.Width / 2 - control.ActualWidth / 2) + "";
+            control.ypos = (int)(parent.Height / 2 - control.ActualHeight / 2) + "";
+
+            //Canvas.SetLeft(control, parent.Width / 2 - control.Width / 2);
+            //Canvas.SetTop(control, parent.Height / 2 - control.Height / 2);
+
+            if (control.GetActualX < -32767)
+                control.xpos = "0";
+            if (control.GetActualY < -32767)
+                control.ypos = "0";
 
             control.Focus();
         }

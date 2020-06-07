@@ -56,12 +56,24 @@ namespace UI_Resource_Themer
 
         public CImagePanel()
         {
-            scaleimage = "0";
+            Background = Brushes.Transparent;
+            scaleimage = "1";
         }
 
         protected override void OnRender(DrawingContext drawingContext)
         {
-            drawingContext.DrawRectangle(brush, Util.EmptyPen, new Rect(RenderSize));
+            var rect = new Rect(RenderSize);
+
+            drawingContext.DrawRectangle(brush, Util.EmptyPen, rect);
+
+            if (ImageSource != null)
+            {
+                rect.Width = scaleimage != "0" ? Width : ImageSource.Width;
+                rect.Height = scaleimage != "0" ? Height : ImageSource.Height;
+
+                drawingContext.DrawImage(ImageSource, rect);
+            }
+
             base.OnRender(drawingContext);
         }
     }

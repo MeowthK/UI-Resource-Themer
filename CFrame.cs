@@ -40,7 +40,16 @@ namespace UI_Resource_Themer
     {
         private readonly List<UIElement> children = new List<UIElement>();
 
-        public UIElement[] Children { get { return children.ToArray(); } }
+        public UIElement[] Children
+        {
+            get
+            {
+                var children = new UIElement[Content.Children.Count];
+                Content.Children.CopyTo(children, 0);
+
+                return children;
+            }
+        }
 
         public CCanvas Content { get; } = new CCanvas();
 
@@ -78,42 +87,43 @@ namespace UI_Resource_Themer
             BoxColor = Color.FromArgb(100, 255, 255, 255);
             //Content.Visibility = Visibility.Hidden;
 
-            Loaded += (o, e) =>
-            {
-                var parent = Parent as Canvas;
-                parent.Children.Add(Content);
+            Loaded += Load;
+        }
 
-                Canvas.SetLeft(Content, GetActualX);
-                Canvas.SetTop(Content, GetActualY);
+        private void Move(object sender, EventArgs e)
+        {
+            Canvas.SetLeft(Content, GetActualX);
+            Canvas.SetTop(Content, GetActualY);
+        }
 
-                Content.DataContext = this;
+        private void Load(object sender, RoutedEventArgs e)
+        {
+            var parent = Parent as Canvas;
+            parent.Children.Add(Content);
 
-                Moved += (obj, ev) =>
-                {
-                    //if (Content.Visibility == Visibility.Hidden)
-                    //    Content.Visibility = Visibility.Visible;
+            Canvas.SetLeft(Content, GetActualX);
+            Canvas.SetTop(Content, GetActualY);
 
-                    Canvas.SetLeft(Content, GetActualX);
-                    Canvas.SetTop(Content, GetActualY);
-                };
+            Content.DataContext = this;
 
-                //IsEnabledChanged += (oj, ev) => Content.IsEnabled = IsEnabled;
-                //IsVisibleChanged += (obj, ev) =>
-                //{
-                //    Content.DrawWireframe = Visibility == Visibility.Visible;
-                //};
-                //NameChanged += (obj, ev) => InvalidateVisual();
-            };
+            Moved += Move;
+            Unloaded += Unload;
+        }
 
-            Unloaded += (o, e) =>
-            {
-                Content.Children.Clear();
+        private void Unload(object sender, RoutedEventArgs e)
+        {
+            Loaded -= Load;
+            Moved -= Move;
+            Unloaded -= Unload;
 
-                if ((Content.Parent as Canvas) != null)
-                    (Content.Parent as Canvas).Children.Remove(Content);
+            Content.Children.Clear();
+            children.Clear();
+            Content.DataContext = null;
 
-                GC.Collect();
-            };
+            if ((Content.Parent as Canvas) != null)
+                (Content.Parent as Canvas).Children.Remove(Content);
+
+            GC.Collect();
         }
 
         protected override void OnRender(DrawingContext drawingContext)
